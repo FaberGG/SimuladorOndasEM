@@ -14,6 +14,7 @@ export const EmWave = ({
   //onda Reflejada
   amplitudeR,
   wavelengthR,
+ 
   //PASAR PARAMETROS (props) para esta onda
   //onda Trasmitida
   amplitudeT,
@@ -24,62 +25,8 @@ export const EmWave = ({
   showMagnetic,
   boundaryCondition,
 }) => {
-  const generateElectricField = () => {
-    //si esta en el segundo medio
-    if (isSecondMedium) {
-      return calculations.calculateElectricField(
-        height,
-        width,
-        time,
-        frequencyI,
-        wavelengthT,
-        amplitudeT,
-        boundaryCondition,
-        isSecondMedium,
-        "T" //trasmitido
-      );
-    } else {
-      return calculations.calculateElectricField(
-        height,
-        width,
-        time,
-        frequencyI,
-        wavelengthI,
-        amplitudeI,
-        boundaryCondition,
-        isSecondMedium,
-        "I" //incidente
-      );
-    }
-  };
-  const generateMagneticField = () => {
-    if (isSecondMedium) {
-      return calculations.calculateMagneticField(
-        height,
-        width,
-        time,
-        frequencyI,
-        wavelengthT,
-        amplitudeT,
-        velocities.v2,
-        boundaryCondition,
-        isSecondMedium,
-        "T"
-      );
-    }
-    return calculations.calculateMagneticField(
-      height,
-      width,
-      time,
-      frequencyI,
-      wavelengthI,
-      amplitudeI,
-      velocities.v1,
-      boundaryCondition,
-      isSecondMedium,
-      "I"
-    );
-  };
+
+
   return (
     <div style={{ flex: "0" }}>
       <svg
@@ -100,24 +47,130 @@ export const EmWave = ({
           strokeDasharray="4" //la linea se ve punteada
         />
 
-        {/* Campo Eléctrico */}
-        {showElectric && (
-          <polyline
-            points={generateElectricField()}
-            fill="none"
-            stroke="blue"
-            strokeWidth="2"
-          />
-        )}
-
-        {/* Campo Magnético */}
-        {showMagnetic && (
-          <polyline
-            points={generateMagneticField()}
-            fill="none"
-            stroke="red"
-            strokeWidth="2"
-          />
+        {isSecondMedium ? (
+          <>
+            
+            {showElectric && (
+              //SE RENDERIZA UNA VEZ
+              <polyline
+                points={calculations.calculateElectricField(
+                  height,
+                  width,
+                  time,
+                  frequencyI,
+                  wavelengthT,
+                  amplitudeT,
+                  boundaryCondition,
+                  isSecondMedium,
+                  "T" //trasmitido
+                )}
+                fill="none"
+                stroke="blue"
+                strokeWidth="2"
+              />
+            )}
+            {showMagnetic && (
+              <polyline
+                points={calculations.calculateMagneticField(
+                  height,
+                  width,
+                  time,
+                  frequencyI,
+                  wavelengthT,
+                  amplitudeT,
+                  velocities.v2,
+                  boundaryCondition,
+                  isSecondMedium,
+                  "T"
+                )}
+                fill="none"
+                stroke="red"
+                strokeWidth="2"
+              />
+            )}
+          </>
+        ) : ( //SE RENDERIZA DOS VECES 
+          <>
+          
+            {showElectric && (
+              <polyline
+                points={calculations.calculateElectricField(
+                  height,
+                  width,
+                  time,
+                  frequencyI,
+                  wavelengthI,
+                  amplitudeI,
+                  boundaryCondition,
+                  isSecondMedium,
+                  "I" //incidente
+                )}
+                fill="none"
+                stroke="blue"
+                strokeWidth="2"
+              />
+            )}
+            {showMagnetic && (
+              <polyline
+                points={calculations.calculateMagneticField(
+                  height,
+                  width,
+                  time,
+                  frequencyI,
+                  wavelengthI,
+                  amplitudeI,
+                  velocities.v1,
+                  boundaryCondition,
+                  isSecondMedium,
+                  "I" //Incidente
+                )}
+                fill="none"
+                stroke="red"
+                strokeWidth="2"
+              />
+            )}
+            {showElectric && (
+              //REFLEJADA ELECTRICA Y MAGNETICA
+              <polyline
+                points={calculations.calculateElectricField(
+                  height,
+                  width,
+                  time,
+                  frequencyI,
+                  wavelengthR,
+                  amplitudeR,
+                  velocities.v1,
+                  boundaryCondition,
+                  isSecondMedium,
+                  "R" //REFLEJADA 
+                )}
+                fill="none"
+                stroke="yellow"
+                strokeWidth="2"
+                strokeDasharray="6" //la linea se ve punteada
+              />
+            )}
+            {showMagnetic && (
+              <polyline
+                points={calculations.calculateMagneticField(
+                  height,
+                  width,
+                  time,
+                  frequencyI,
+                  wavelengthR,
+                  amplitudeR,
+                  velocities.v1,
+                  boundaryCondition,
+                  isSecondMedium,
+                  "R" //REFLEJADA 
+                )}
+                fill="none"
+                stroke="white"
+                strokeWidth="2"
+                strokeDasharray="6" //la linea se ve punteada
+              />
+            )}
+          </>
         )}
       </svg>
     </div>

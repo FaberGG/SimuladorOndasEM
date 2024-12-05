@@ -9,7 +9,15 @@ export const Controls = ({
   frequency,
   setFrequency,
   wavelength,
-  setWavelength,
+  //valores a mostrar
+  amplitudeR,
+  wavelengthR,
+  amplitudeT,
+  wavelengthT,
+  velocities,
+  coefR,
+  coefT,
+  //otros estados
   showElectric,
   setShowElectric,
   showMagnetic,
@@ -96,6 +104,10 @@ export const Controls = ({
         disabled={false}
         min={0}
       />
+
+      <h2 style={{ fontSize: "18px", marginBottom: "20px" }}>
+        Variables calculadas
+      </h2>
       {/* Constantes Fundamentales */}
       <div className="mb-4 p-4 bg-gray-50 rounded">
         <h3 className="font-semibold mb-2">Constantes Fundamentales:</h3>
@@ -166,7 +178,17 @@ export const Controls = ({
         </label> */}
 
         {/* Valores calculados actualizados */}
-        <CalculatedValues frequency={frequency} wavelength={wavelength} />
+        <CalculatedValues
+          frequency={frequency}
+          wavelengthI={wavelength}
+          amplitudeR={amplitudeR}
+          wavelengthR={wavelengthR}
+          amplitudeT={amplitudeT}
+          wavelengthT={wavelengthT}
+          velocities={velocities}
+          coefR={coefR}
+          coefT={coefT}
+        />
       </div>
     </div>
   );

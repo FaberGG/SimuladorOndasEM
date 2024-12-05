@@ -67,12 +67,13 @@ export const calculateElectricField = (
   wavelength,
   amplitude,
   boundaryCondition,
-  isSecondMedium
+  isSecondMedium,
+  strOnda
 ) => {
   calculateScales(frequency);
   const omega = 2 * Math.PI * frequency; // Frecuencia angular
   const k = (2 * Math.PI) / wavelength; // Número de onda
-
+  let E;
   const timeStep = tscale; // Asegura un paso de tiempo razonable
   let adjustedTime = time * timeStep;
 
@@ -86,8 +87,13 @@ export const calculateElectricField = (
     //const factor = boundaryCondition === "both-open" ? 1 : Math.cos(k * xReal);
 
     // Calcular el campo eléctrico para la onda
-    const E = amplitude * Math.cos(k * xReal - omega * adjustedTime);
+    if(strOnda="R"){
+     E= - amplitude * Math.cos(k * xReal + omega * adjustedTime);
+    }else{
+     E = amplitude * Math.cos(k * xReal - omega * adjustedTime);
+    }
     return `${isSecondMedium ? x - width : x},${height / 2 + E}`;
+    
   }).join(" ");
 };
 
@@ -107,7 +113,6 @@ export const calculateMagneticField = (
   const B0 = calculateMagneticAmplitude(amplitude, velocity);
   const k = (2 * Math.PI) / wavelength;
   const omega = 2 * Math.PI * frequency;
-
   const timeStep = tscale; // Asegura un paso de tiempo razonable
   let adjustedTime = time * timeStep;
 
@@ -121,6 +126,7 @@ export const calculateMagneticField = (
     //const factor = boundaryCondition === "both-open" ? 1 : Math.sin(k * x);
     let B;
     if (strOnda == "R") {
+      B= B0 * Math.cos(k * xReal + omega * adjustedTime + Math.PI / 2);
     } else {
       B = B0 * Math.cos(k * xReal - omega * adjustedTime + Math.PI / 2);
     }
@@ -128,6 +134,8 @@ export const calculateMagneticField = (
     return `${isSecondMedium ? x - width : x},${height / 2 + B}`;
   }).join(" ");
 };
+
+
 
 export const calculateBetha = (mu1, mu2, v1, v2) => {
   return (mu1 * v1) / (mu2 * v2);
@@ -139,7 +147,9 @@ export const calculateCoefT = (betha) => {
 
 //CALCULO EL COEFICIENTE DE REFLEXIÓN//
 export const calculateCoefR = (betha) => {
+  
   return (1 - betha) / (1 + betha);
+  
 };
 
 export const calculateAmplitude = (coef, amplitudeI) => {

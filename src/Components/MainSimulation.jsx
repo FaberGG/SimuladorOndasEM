@@ -66,7 +66,7 @@ export const MainSimulation = () => {
     //calculos para onda reflejada
     const coefR = calculations.calculateCoefR(betha);
     const amplitudeR = calculations.calculateAmplitude(coefR, amplitudeI);
-    const wawelengthR = calculations.calculatWavelength(
+    const wavelengthR = calculations.calculatWavelength(
       velocities.v1,
       frequencyI
     );
@@ -86,6 +86,9 @@ export const MainSimulation = () => {
     setAmplitudeT(amplitudeT);
     setWavelengthI(wavelengthI);
     setWavelengthT(wavelengthT);
+    setCoefR(coefR);
+    setAmplitudeR(amplitudeR);
+    setWavelengthR(wavelengthR);
   };
 
   useEffect(() => {
@@ -110,7 +113,16 @@ export const MainSimulation = () => {
     animationFrameId = requestAnimationFrame(update); // Iniciar la animación
 
     return () => cancelAnimationFrame(animationFrameId); // Limpieza al desmontar el componente
-  }, [mediumVars, frequencyI, amplitudeI, velocities]);
+  }, [
+    mediumVars,
+    frequencyI,
+    amplitudeI,
+    velocities,
+    amplitudeR,
+    wavelengthI,
+    coefR,
+    coefT,
+  ]);
 
   return (
     <>
@@ -133,7 +145,7 @@ export const MainSimulation = () => {
             color: "white",
           }}
         >
-          Simulación de Ondas Electromagnéticas Reflexion y trasmision
+          Simulación de Ondas Electromagnéticas Reflexión y trasmisión
         </h1>
 
         <div style={{ display: "flex", width: "100%", gap: "0px" }}>
@@ -157,7 +169,8 @@ export const MainSimulation = () => {
               wavelengthI={wavelengthI}
               setWavelengthI={setWavelengthI}
               //onda reflejada
-              setAmplitudeR={setAmplitudeR}
+              amplitudeR={amplitudeR}
+              wavelengthR={wavelengthR}
               velocities={velocities}
               //utilidades
               showElectric={showElectric}
@@ -195,6 +208,15 @@ export const MainSimulation = () => {
             setAmplitude={setAmplitudeI}
             frequency={frequencyI}
             setFrequency={setFrequencyI}
+            //valores a mostrar
+            amplitudeR={amplitudeR}
+            wavelengthR={wavelengthR}
+            amplitudeT={amplitudeT}
+            wavelengthT={wavelengthT}
+            velocities={velocities}
+            coefR={coefR}
+            coefT={coefT}
+            //utilidades
             showElectric={showElectric}
             setShowElectric={setShowElectric}
             showMagnetic={showMagnetic}
