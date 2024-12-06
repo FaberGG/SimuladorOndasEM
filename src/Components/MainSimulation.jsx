@@ -1,47 +1,47 @@
-import React from "react";
-import { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { EmWave } from "./EmWave";
 import { Controls } from "./Controls";
 import * as calculations from "../calculations";
+import "./styles/MainSimulation.css";
 
 export const MainSimulation = () => {
-  // Estados básicos
   const [time, setTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(true); // Estado para controlar si el tiempo está corriendo
   const [showMagnetic, setShowMagnetic] = useState(true);
   const [showElectric, setShowElectric] = useState(true);
   const [showScaledB, setShowScaledB] = useState(false);
   const [boundaryCondition, setBoundaryCondition] = useState("both-open");
 
-  //ONDA INCIDENTE
   const [amplitudeI, setAmplitudeI] = useState(39);
-  const [frequencyI, setFrequencyI] = useState(4e14);
-  const [wavelengthI, setWavelengthI] = useState(200); //lamda
+  const [frequencyI, setFrequencyI] = useState(4000);
+  const [wavelengthI, setWavelengthI] = useState(200);
 
-  //ONDA REFLEJADA
   const [amplitudeR, setAmplitudeR] = useState(39);
   const [wavelengthR, setWavelengthR] = useState(200);
-  //ONDA TRASMITIDA
+
   const [amplitudeT, setAmplitudeT] = useState(90);
   const [wavelengthT, setWavelengthT] = useState(200);
 
-  //MEDIOS
   const [mediumVars, setMediumVars] = useState({
-    mu1: calculations.mu0, //se lee
-    epsilon1: calculations.epsilon0, //se lee
-    mu2: calculations.mu0, //se lee
-    epsilon2: calculations.epsilon0, // se lee
+    mu1: calculations.mu0,
+    mu_r1: 1,
+    epsilon1: calculations.epsilon0,
+    epsilon_r1: 1,
+    mu2: calculations.mu0,
+    mu_r2: 1,
+    epsilon2: calculations.epsilon0,
+    epsilon_r2: 1,
   });
+
   const [velocities, setVelocities] = useState({
     v1: calculations.c,
     v2: calculations.c,
   });
-  //COEFICIENTES
+
   const [coefR, setCoefR] = useState();
   const [coefT, setCoefT] = useState();
 
   const setAllVars = () => {
-    // CALCULO LAS VELOCIDADES DE ONDA EN LOS MEDIOS 1 Y 2
     const velocities = calculations.calculateVelocities(
       mediumVars.mu1,
       mediumVars.mu2,
@@ -57,13 +57,11 @@ export const MainSimulation = () => {
       velocities.v2
     );
 
-    // Para la Onda incidente
     const wavelengthI = calculations.calculatWavelength(
       velocities.v1,
       frequencyI
     );
 
-    //calculos para onda reflejada
     const coefR = calculations.calculateCoefR(betha);
     const amplitudeR = calculations.calculateAmplitude(coefR, amplitudeI);
     const wavelengthR = calculations.calculatWavelength(
@@ -71,9 +69,6 @@ export const MainSimulation = () => {
       frequencyI
     );
 
-    //ns coefR=calculations.o; //onda total
-
-    // Para la Onda transmitida
     const coefT = calculations.calculateCoefT(betha);
     const amplitudeT = calculations.calculateAmplitude(coefT, amplitudeI);
     const wavelengthT = calculations.calculatWavelength(
@@ -81,7 +76,6 @@ export const MainSimulation = () => {
       frequencyI
     );
 
-    // Actualiza los estados, asegurando que usas los valores más recientes
     setCoefT(coefT);
     setAmplitudeT(amplitudeT);
     setWavelengthI(wavelengthI);
@@ -92,37 +86,33 @@ export const MainSimulation = () => {
   };
 
   useEffect(() => {
+    if (!isRunning) return; // Detener el tiempo si `isRunning` es false
+
     let animationFrameId;
-    let lastTime = performance.now(); // Registro del tiempo inicial
+    let lastTime = performance.now();
 
     const update = () => {
-      const currentTime = performance.now(); // Tiempo actual en milisegundos
-      const deltaTime = (currentTime - lastTime) / 1000; // Diferencia en segundos
+      const currentTime = performance.now();
+      const deltaTime = (currentTime - lastTime) / 1000;
       lastTime = currentTime;
 
-      // Actualiza el tiempo y recalcula las variables en cada frame
-      setTime((t) => {
-        const newTime = t + deltaTime;
-        setAllVars(); // Llamada a la función en cada frame
-        return newTime;
-      });
+      setTime((t) => t + deltaTime);
+      setAllVars();
 
-      animationFrameId = requestAnimationFrame(update); // Continuar la animación
+      animationFrameId = requestAnimationFrame(update);
     };
 
-    animationFrameId = requestAnimationFrame(update); // Iniciar la animación
+    animationFrameId = requestAnimationFrame(update);
 
-    return () => cancelAnimationFrame(animationFrameId); // Limpieza al desmontar el componente
-  }, [
-    mediumVars,
-    frequencyI,
-    amplitudeI,
-    velocities,
-    amplitudeR,
-    wavelengthI,
-    coefR,
-    coefT,
-  ]);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isRunning, mediumVars, frequencyI, amplitudeI]);
+
+  const toggleTime = () => {
+    if (isRunning) {
+      setTime(0); // Reinicia el tiempo si está corriendo
+    }
+    setIsRunning(!isRunning); // Alterna el estado
+  };
 
   return (
     <>
@@ -145,61 +135,218 @@ export const MainSimulation = () => {
             color: "white",
           }}
         >
-          Simulación de Ondas Electromagnéticas Reflexión y trasmisión
+          Simulación de Ondas Electromagnéticas Reflexión y Transmisión
         </h1>
+
+        <button
+          onClick={toggleTime}
+          style={{
+            padding: "10px 20px",
+            marginBottom: "20px",
+            backgroundColor: "#007BFF",
+            color: "#fff",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          {isRunning ? "Detener y Reiniciar Tiempo" : "Reiniciar Tiempo"}
+        </button>
 
         <div style={{ display: "flex", width: "100%", gap: "0px" }}>
           {/* DIVISION DE MEDIOS */}
-          <div
-            className="mediumsContainer"
-            style={{ display: "flex", width: "100%", gap: "0px" }}
-          >
-            {/* Panel de visualización MEDIO 1 */}
-            <EmWave
-              width={400}
-              height={400}
-              bgcolor={"transparent"}
-              //define medio 2
-              isSecondMedium={false}
-              //var tiempo global
-              time={time}
-              //onda incidente
-              amplitudeI={amplitudeI}
-              frequencyI={frequencyI}
-              wavelengthI={wavelengthI}
-              setWavelengthI={setWavelengthI}
-              //onda reflejada
-              amplitudeR={amplitudeR}
-              wavelengthR={wavelengthR}
-              velocities={velocities}
-              //utilidades
-              showElectric={showElectric}
-              showMagnetic={showMagnetic}
-              boundaryCondition={boundaryCondition}
-            />
-            {/* Panel de visualización MEDIO 2 */}
-            <EmWave
-              //dimensiones y color del panel
-              width={400}
-              height={400}
-              bgcolor={"#ffffff15"}
-              //define medio 2
-              isSecondMedium={true}
-              //var tiempo global
-              time={time}
-              //onda incidente
-              amplitudeI={amplitudeI}
-              frequencyI={frequencyI}
-              wavelengthI={wavelengthI}
-              //onda trasmitida
-              amplitudeT={amplitudeT}
-              wavelengthT={wavelengthT}
-              velocities={velocities}
-              //utilidades
-              showElectric={showElectric}
-              showMagnetic={showMagnetic}
-              boundaryCondition={boundaryCondition}
-            />
+
+          <div className="panels-container">
+            {/* PANELES PARA CAMPO ELECTRICO */}
+            <div style={{ fontSize: "14px", color: "white" }}>
+              <ul style={{ listStyleType: "none", padding: 0 }}>
+                <li>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "#1068ff",
+                      marginRight: "5px",
+                    }}
+                  ></span>
+                  Campo eléctrico incidente (I)
+                </li>
+                <li>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "yellow",
+                      marginRight: "5px",
+                    }}
+                  ></span>
+                  Campo eléctrico reflejado (R)
+                </li>
+                <li>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "white",
+                      marginRight: "5px",
+                    }}
+                  ></span>
+                  Campo eléctrico resultante
+                </li>
+              </ul>
+            </div>
+            <h2
+              style={{ fontSize: "18px", marginBottom: "20px", color: "white" }}
+            >
+              CAMPO ELÉCTRICO
+            </h2>
+            <div className="mediumsContainer">
+              {/* Panel de visualización MEDIO 1 */}
+              <EmWave
+                width={400}
+                height={400}
+                bgcolor={"transparent"}
+                //define medio 2
+                isSecondMedium={false}
+                //var tiempo global
+                time={time}
+                //onda incidente
+                amplitudeI={amplitudeI}
+                frequencyI={frequencyI}
+                wavelengthI={wavelengthI}
+                setWavelengthI={setWavelengthI}
+                //onda reflejada
+                amplitudeR={amplitudeR}
+                wavelengthR={wavelengthR}
+                velocities={velocities}
+                //utilidades
+                showElectric={showElectric}
+                showMagnetic={false}
+                boundaryCondition={boundaryCondition}
+              />
+              {/* Panel de visualización MEDIO 2 */}
+              <EmWave
+                //dimensiones y color del panel
+                width={400}
+                height={400}
+                bgcolor={"#ffffff15"}
+                //define medio 2
+                isSecondMedium={true}
+                //var tiempo global
+                time={time}
+                //onda incidente
+                amplitudeI={amplitudeI}
+                frequencyI={frequencyI}
+                wavelengthI={wavelengthI}
+                //onda trasmitida
+                amplitudeT={amplitudeT}
+                wavelengthT={wavelengthT}
+                velocities={velocities}
+                //utilidades
+                showElectric={showElectric}
+                showMagnetic={false}
+                boundaryCondition={boundaryCondition}
+              />
+            </div>
+
+            <div style={{ fontSize: "14px", color: "white" }}>
+              <ul style={{ listStyleType: "none", padding: 0 }}>
+                <li>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "red",
+                      marginRight: "5px",
+                    }}
+                  ></span>
+                  Campo magnético incidente (I)
+                </li>
+                <li>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "yellow",
+                      marginRight: "5px",
+                    }}
+                  ></span>
+                  Campo magnético reflejado (R)
+                </li>
+                <li>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "12px",
+                      height: "12px",
+                      backgroundColor: "white",
+                      marginRight: "5px",
+                    }}
+                  ></span>
+                  Campo magnético resultante
+                </li>
+              </ul>
+            </div>
+            <h2
+              style={{ fontSize: "18px", marginBottom: "20px", color: "white" }}
+            >
+              CAMPO MAGNÉTICO
+            </h2>
+
+            {/* PANELES PARA CAMPO MAGNETICO */}
+            <div className="mediumsContainer">
+              {/* Panel de visualización MEDIO 1 */}
+              <EmWave
+                width={400}
+                height={400}
+                bgcolor={"transparent"}
+                //define medio 2
+                isSecondMedium={false}
+                //var tiempo global
+                time={time}
+                //onda incidente
+                amplitudeI={amplitudeI}
+                frequencyI={frequencyI}
+                wavelengthI={wavelengthI}
+                setWavelengthI={setWavelengthI}
+                //onda reflejada
+                amplitudeR={amplitudeR}
+                wavelengthR={wavelengthR}
+                velocities={velocities}
+                //utilidades
+                showElectric={false}
+                showMagnetic={showMagnetic}
+                boundaryCondition={boundaryCondition}
+              />
+              {/* Panel de visualización MEDIO 2 */}
+              <EmWave
+                //dimensiones y color del panel
+                width={400}
+                height={400}
+                bgcolor={"#ffffff15"}
+                //define medio 2
+                isSecondMedium={true}
+                //var tiempo global
+                time={time}
+                //onda incidente
+                amplitudeI={amplitudeI}
+                frequencyI={frequencyI}
+                wavelengthI={wavelengthI}
+                //onda trasmitida
+                amplitudeT={amplitudeT}
+                wavelengthT={wavelengthT}
+                velocities={velocities}
+                //utilidades
+                showElectric={false}
+                showMagnetic={showMagnetic}
+                boundaryCondition={boundaryCondition}
+              />
+            </div>
           </div>
 
           {/* Panel de control */}

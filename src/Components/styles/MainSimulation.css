@@ -1,0 +1,10 @@
+.mediumsContainer {
+  display: flex;
+  width: 100%;
+  gap: 0px;
+  margin-right: 30px;
+  margin-bottom: 20px;
+}
+.panels-container {
+  width: 100%;
+}

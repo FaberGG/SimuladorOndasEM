@@ -18,7 +18,9 @@ export const CalculatedValues = ({
 
   return (
     <div className="mt-4 p-4 bg-gray-50 rounded">
-      <h3 className="font-semibold mb-2">Valores Calculados:</h3>
+      <h2 style={{ fontSize: "18px", marginBottom: "20px" }}>
+        Variables calculadas
+      </h2>
 
       <FormInput
         label="Coeficientes de reflexión y trasmisión"

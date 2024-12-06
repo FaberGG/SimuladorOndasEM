@@ -3,10 +3,15 @@ export const c = 3e8; // velocidad de la luz en m/s
 export const epsilon0 = 8.85e-12; // permitividad del vacío en F/m
 export const mu0 = 1.256637061e-6; // permeabilidad del vacío en H/m
 
-let tscale = 6e-15;
+let tscale = 6e-1;
 let xscale = 7.5e-7; //longitud luz visible
 
 const calculateScales = (frecuency) => {
+  if (frecuency < 5e2) {
+    xscale = 10000000;
+    tscale = 10e-3;
+    return;
+  }
   if (frecuency < 3e4) {
     // Ondas de radio
     tscale = 1e-3;
@@ -66,9 +71,9 @@ export const calculateElectricField = (
   frequency,
   wavelength,
   amplitude,
-  boundaryCondition,
+
   isSecondMedium,
-  strOnda
+  isReflected
 ) => {
   calculateScales(frequency);
   const omega = 2 * Math.PI * frequency; // Frecuencia angular
@@ -77,23 +82,19 @@ export const calculateElectricField = (
   const timeStep = tscale; // Asegura un paso de tiempo razonable
   let adjustedTime = time * timeStep;
 
-  return Array.from({ length: 100 }, (_, i) => {
-    let x = (i / 100) * width;
+  return Array.from({ length: 400 }, (_, i) => {
+    let x = (i / 400) * width;
     if (isSecondMedium) x = x + width;
     // Mapear x al rango
     const xReal = (x / width) * xscale; // Normalización al rango físico
 
-    // Factor según las condiciones de frontera
-    //const factor = boundaryCondition === "both-open" ? 1 : Math.cos(k * xReal);
-
     // Calcular el campo eléctrico para la onda
-    if(strOnda="R"){
-     E= - amplitude * Math.cos(k * xReal + omega * adjustedTime);
-    }else{
-     E = amplitude * Math.cos(k * xReal - omega * adjustedTime);
+    if (isReflected) {
+      E = -amplitude * Math.cos(k * xReal + omega * adjustedTime);
+    } else {
+      E = amplitude * Math.cos(k * xReal - omega * adjustedTime);
     }
     return `${isSecondMedium ? x - width : x},${height / 2 + E}`;
-    
   }).join(" ");
 };
 
@@ -105,9 +106,8 @@ export const calculateMagneticField = (
   wavelength,
   amplitude,
   velocity,
-  boundaryCondition,
   isSecondMedium,
-  strOnda
+  isReflected
 ) => {
   calculateScales(frequency);
   const B0 = calculateMagneticAmplitude(amplitude, velocity);
@@ -116,26 +116,88 @@ export const calculateMagneticField = (
   const timeStep = tscale; // Asegura un paso de tiempo razonable
   let adjustedTime = time * timeStep;
 
-  return Array.from({ length: 100 }, (_, i) => {
-    let x = (i / 100) * width;
+  return Array.from({ length: 400 }, (_, i) => {
+    let x = (i / 400) * width;
     if (isSecondMedium) x = x + width;
 
     // Mapear x al rango
     const xReal = (x / width) * xscale; // Normalización al rango físico
 
-    //const factor = boundaryCondition === "both-open" ? 1 : Math.sin(k * x);
     let B;
-    if (strOnda == "R") {
-      B= B0 * Math.cos(k * xReal + omega * adjustedTime + Math.PI / 2);
+    if (isReflected) {
+      B = B0 * Math.cos(k * xReal + omega * adjustedTime);
     } else {
-      B = B0 * Math.cos(k * xReal - omega * adjustedTime + Math.PI / 2);
+      B = B0 * Math.cos(k * xReal - omega * adjustedTime);
     }
 
     return `${isSecondMedium ? x - width : x},${height / 2 + B}`;
   }).join(" ");
 };
 
+export const calculateTotalElectric = (
+  height,
+  width,
+  time,
+  frequency,
+  wavelengthI,
+  amplitudeI,
+  amplitudeR
+) => {
+  calculateScales(frequency);
+  const omega = 2 * Math.PI * frequency; // Frecuencia angular
+  const k = (2 * Math.PI) / wavelengthI; // Número de onda
+  let ER;
+  let EI;
+  let E;
+  const timeStep = tscale; // Asegura un paso de tiempo razonable
+  let adjustedTime = time * timeStep;
 
+  return Array.from({ length: 400 }, (_, i) => {
+    let x = (i / 400) * width;
+    // Mapear x al rango
+    const xReal = (x / width) * xscale; // Normalización al rango físico
+
+    // Calcular el campo eléctrico para la onda
+    ER = -amplitudeR * Math.cos(k * xReal + omega * adjustedTime);
+    EI = amplitudeI * Math.cos(k * xReal - omega * adjustedTime);
+
+    E = EI + ER;
+    return `${x},${height / 2 + E}`;
+  }).join(" ");
+};
+export const calculateTotalMagnetic = (
+  height,
+  width,
+  time,
+  frequency,
+  wavelength,
+  amplitudeI,
+  amplitudeR,
+  velocity
+) => {
+  calculateScales(frequency);
+  const B0I = calculateMagneticAmplitude(amplitudeI, velocity);
+  const B0R = calculateMagneticAmplitude(amplitudeR, velocity);
+  const k = (2 * Math.PI) / wavelength;
+  const omega = 2 * Math.PI * frequency;
+  const timeStep = tscale; // Asegura un paso de tiempo razonable
+  let adjustedTime = time * timeStep;
+
+  return Array.from({ length: 400 }, (_, i) => {
+    let x = (i / 400) * width;
+
+    // Mapear x al rango
+    const xReal = (x / width) * xscale; // Normalización al rango físico
+
+    let BI, BR;
+    BR = B0I * Math.cos(k * xReal + omega * adjustedTime);
+    BI = B0R * Math.cos(k * xReal - omega * adjustedTime);
+
+    const B = BI + BR;
+
+    return `${x},${height / 2 + B}`;
+  }).join(" ");
+};
 
 export const calculateBetha = (mu1, mu2, v1, v2) => {
   return (mu1 * v1) / (mu2 * v2);
@@ -147,9 +209,7 @@ export const calculateCoefT = (betha) => {
 
 //CALCULO EL COEFICIENTE DE REFLEXIÓN//
 export const calculateCoefR = (betha) => {
-  
   return (1 - betha) / (1 + betha);
-  
 };
 
 export const calculateAmplitude = (coef, amplitudeI) => {

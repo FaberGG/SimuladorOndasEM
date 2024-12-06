@@ -26,10 +26,29 @@ export const Controls = ({
   setMediumVars,
 }) => {
   const handleMediumVarsChange = (name, value) => {
-    setMediumVars((prev) => ({
-      ...prev,
-      [name]: parseFloat(value) || 0,
-    }));
+    // Parse the input value as a float or set to 0 if invalid
+    const numericValue = parseFloat(value) || 0;
+
+    setMediumVars((prev) => {
+      // Compute new state
+      const updatedVars = {
+        ...prev,
+        [name]: numericValue,
+      };
+
+      // Calculate absolute values based on relative values
+      if (name === "mu_r1") {
+        updatedVars.mu1 = numericValue * mu0; // μ₁ = μᵣ₁ * μ₀
+      } else if (name === "mu_r2") {
+        updatedVars.mu2 = numericValue * mu0; // μ₂ = μᵣ₂ * μ₀
+      } else if (name === "epsilon_r1") {
+        updatedVars.epsilon1 = numericValue * epsilon0; // 𝜖₁ = 𝜖ᵣ₁ * 𝜖₀
+      } else if (name === "epsilon_r2") {
+        updatedVars.epsilon2 = numericValue * epsilon0; // 𝜖₂ = 𝜖ᵣ₂ * 𝜖₀
+      }
+
+      return updatedVars;
+    });
   };
 
   return (
@@ -60,54 +79,69 @@ export const Controls = ({
         state={frequency}
         setState={setFrequency}
         label={"Frecuencia (f): " + frequency + " Hz"}
-        min={400000000000000}
-        max={1.5e15}
-        step={10000000000}
+        min={1}
+        max={400}
+        step={1}
       />
 
       <h2 style={{ fontSize: "18px", marginBottom: "20px" }}>
         Permeabilidad y permitividad de los medios
       </h2>
 
+      {/* Inputs para valores relativos */}
+
+      <div className="text-sm text-gray-500">
+        Valor absoluto (𝜇₁): {mediumVars.mu_r1} × μ₀ ≈{" "}
+        {(mediumVars.mu_r1 * mu0).toExponential(2)} H/m
+      </div>
       <FormInput
-        label="Permeabilidad magnética (𝜇1) [H/m]"
-        name="mu1"
-        value={mediumVars.mu1}
+        label="Permeabilidad relativa (𝜇ᵣ₁)"
+        name="mu_r1"
+        value={mediumVars.mu_r1}
         onChange={handleMediumVarsChange}
         disabled={false}
         min={0}
       />
 
+      <div className="text-sm text-gray-500">
+        Valor absoluto (𝜖₁): {mediumVars.epsilon_r1} × ε₀ ≈{" "}
+        {(mediumVars.epsilon_r1 * epsilon0).toExponential(2)} F/m
+      </div>
+
       <FormInput
-        label="Permitividad eléctrica (𝜖1) [F/m]"
-        name="epsilon1"
-        value={mediumVars.epsilon1}
+        label="Permitividad relativa (𝜖ᵣ₁)"
+        name="epsilon_r1"
+        value={mediumVars.epsilon_r1}
+        onChange={handleMediumVarsChange}
+        disabled={false}
+        min={0}
+      />
+      <div className="text-sm text-gray-500">
+        Valor absoluto (𝜇₂): {mediumVars.mu_r2} × μ₀ ≈{" "}
+        {(mediumVars.mu_r2 * mu0).toExponential(2)} H/m
+      </div>
+      <FormInput
+        label="Permeabilidad relativa (𝜇ᵣ₂)"
+        name="mu_r2"
+        value={mediumVars.mu_r2}
         onChange={handleMediumVarsChange}
         disabled={false}
         min={0}
       />
 
+      <div className="text-sm text-gray-500">
+        Valor absoluto (𝜖₂): {mediumVars.epsilon_r2} × ε₀ ≈{" "}
+        {(mediumVars.epsilon_r2 * epsilon0).toExponential(2)} F/m
+      </div>
       <FormInput
-        label="Permeabilidad magnética (𝜇2) [H/m]"
-        name="mu2"
-        value={mediumVars.mu2}
+        label="Permitividad relativa (𝜖ᵣ₂)"
+        name="epsilon_r2"
+        value={mediumVars.epsilon_r2}
         onChange={handleMediumVarsChange}
         disabled={false}
         min={0}
       />
 
-      <FormInput
-        label="Permitividad eléctrica (𝜖2) [F/m]"
-        name="epsilon2"
-        value={mediumVars.epsilon2}
-        onChange={handleMediumVarsChange}
-        disabled={false}
-        min={0}
-      />
-
-      <h2 style={{ fontSize: "18px", marginBottom: "20px" }}>
-        Variables calculadas
-      </h2>
       {/* Constantes Fundamentales */}
       <div className="mb-4 p-4 bg-gray-50 rounded">
         <h3 className="font-semibold mb-2">Constantes Fundamentales:</h3>
@@ -140,28 +174,6 @@ export const Controls = ({
           <option value="one-closed">Un extremo cerrado</option>
         </select>
       </div> */}
-
-      {/* Controles de visualización */}
-      <div style={{ display: "flex", gap: "20px", marginBottom: "15px" }}>
-        <label>
-          <input
-            type="checkbox"
-            checked={showElectric}
-            onChange={(e) => setShowElectric(e.target.checked)}
-            style={{ marginRight: "5px" }}
-          />
-          Campo E
-        </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={showMagnetic}
-            onChange={(e) => setShowMagnetic(e.target.checked)}
-            style={{ marginRight: "5px" }}
-          />
-          Campo B
-        </label>
-      </div>
 
       {/* <ScaleInfo showScaledB={showScaledB} E0={amplitude} /> */}
 
