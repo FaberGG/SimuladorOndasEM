@@ -75,7 +75,7 @@ export const calculateElectricField = (
   isSecondMedium,
   isReflected
 ) => {
-  calculateScales(frequency);
+  //calculateScales(frequency);
   const omega = 2 * Math.PI * frequency; // Frecuencia angular
   const k = (2 * Math.PI) / wavelength; // Número de onda
   let E;
@@ -84,7 +84,7 @@ export const calculateElectricField = (
 
   return Array.from({ length: 400 }, (_, i) => {
     let x = (i / 400) * width;
-    if (isSecondMedium) x = x + width;
+    if (!isSecondMedium) x = x - width;
     // Mapear x al rango
     const xReal = (x / width) * xscale; // Normalización al rango físico
 
@@ -94,7 +94,7 @@ export const calculateElectricField = (
     } else {
       E = amplitude * Math.cos(k * xReal - omega * adjustedTime);
     }
-    return `${isSecondMedium ? x - width : x},${height / 2 + E}`;
+    return `${isSecondMedium ? x : x + width},${height / 2 + E}`;
   }).join(" ");
 };
 
@@ -118,19 +118,19 @@ export const calculateMagneticField = (
 
   return Array.from({ length: 400 }, (_, i) => {
     let x = (i / 400) * width;
-    if (isSecondMedium) x = x + width;
+    if (!isSecondMedium) x = x - width;
 
     // Mapear x al rango
     const xReal = (x / width) * xscale; // Normalización al rango físico
 
     let B;
     if (isReflected) {
-      B = B0 * Math.cos(k * xReal + omega * adjustedTime);
+      B = -B0 * Math.cos(-k * xReal - omega * adjustedTime);
     } else {
       B = B0 * Math.cos(k * xReal - omega * adjustedTime);
     }
 
-    return `${isSecondMedium ? x - width : x},${height / 2 + B}`;
+    return `${isSecondMedium ? x : x + width},${height / 2 + B}`;
   }).join(" ");
 };
 
@@ -154,6 +154,7 @@ export const calculateTotalElectric = (
 
   return Array.from({ length: 400 }, (_, i) => {
     let x = (i / 400) * width;
+    x = x - width;
     // Mapear x al rango
     const xReal = (x / width) * xscale; // Normalización al rango físico
 
@@ -162,7 +163,7 @@ export const calculateTotalElectric = (
     EI = amplitudeI * Math.cos(k * xReal - omega * adjustedTime);
 
     E = EI + ER;
-    return `${x},${height / 2 + E}`;
+    return `${x + width},${height / 2 + E}`;
   }).join(" ");
 };
 export const calculateTotalMagnetic = (
@@ -185,17 +186,18 @@ export const calculateTotalMagnetic = (
 
   return Array.from({ length: 400 }, (_, i) => {
     let x = (i / 400) * width;
+    x = x - width;
 
     // Mapear x al rango
     const xReal = (x / width) * xscale; // Normalización al rango físico
 
     let BI, BR;
-    BR = B0I * Math.cos(k * xReal + omega * adjustedTime);
-    BI = B0R * Math.cos(k * xReal - omega * adjustedTime);
+    BR = -B0R * Math.cos(-k * xReal - omega * adjustedTime);
+    BI = B0I * Math.cos(k * xReal - omega * adjustedTime);
 
     const B = BI + BR;
 
-    return `${x},${height / 2 + B}`;
+    return `${x + width},${height / 2 + B}`;
   }).join(" ");
 };
 

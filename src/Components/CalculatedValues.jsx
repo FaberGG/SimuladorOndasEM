@@ -40,6 +40,15 @@ export const CalculatedValues = ({
         value={{ E0R: amplitudeR, E0T: amplitudeT }}
         disabled={true}
       />
+      <FormInput
+        label="Longitud onda trasmitida, incidente y reflejada [m] (campo E)"
+        name="wavelen"
+        value={{
+          LamdaT: wavelengthT,
+          LamdaR: wavelengthR,
+        }}
+        disabled={true}
+      />
     </div>
   );
 };
